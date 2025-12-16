@@ -1,0 +1,17 @@
+[Unit]
+Description=GitHub Actions Self-Hosted Runner
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=localhost/gh-runner:latest
+EnvironmentFile=/opt/github/runner/.env
+Volume=/run/podman/podman.sock:/var/run/docker.sock
+SecurityLabelType=disable
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target
