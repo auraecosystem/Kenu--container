@@ -18,6 +18,15 @@ sudo curl \
     --output /etc/containers/systemd/gh-runner.container \
     --url https://gist.github.com/grenade/128986996dc588c34ee6c3cbdd1b155a/raw/gh-runner.container
 
+sudo groupadd -f podman
+sudo mkdir -p /etc/systemd/system/podman.socket.d
+sudo curl \
+    --fail \
+    --location \
+    --silent \
+    --output /etc/systemd/system/podman.socket.d/override.conf \
+    --url https://gist.github.com/grenade/128986996dc588c34ee6c3cbdd1b155a/raw/override.conf
+
 systemctl is-enabled podman.socket || sudo systemctl enable podman.socket
 systemctl is-active podman.socket || sudo systemctl start podman.socket
 
