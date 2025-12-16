@@ -10,6 +10,8 @@ Volume=/run/podman/podman.sock:/var/run/docker.sock
 SecurityLabelDisable=true
 
 [Service]
+User=root
+Group=podman
 Restart=always
 TimeoutStartSec=300
 
