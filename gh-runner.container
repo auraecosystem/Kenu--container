@@ -7,7 +7,7 @@ Wants=network-online.target
 Image=localhost/gh-runner:latest
 EnvironmentFile=/opt/github/runner/.env
 Volume=/run/podman/podman.sock:/var/run/docker.sock
-SecurityLabelType=disable
+SecurityLabelDisable=true
 
 [Service]
 Restart=always
