@@ -33,7 +33,9 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
     rm -rf /var/lib/apt/lists/*
 
 # 4. Create runner user
-RUN useradd -m runner -s /bin/bash && \
+RUN groupadd -g 1001 podman && \
+    useradd -m runner -s /bin/bash && \
+    usermod -aG podman runner && \
     echo "runner ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 USER runner
