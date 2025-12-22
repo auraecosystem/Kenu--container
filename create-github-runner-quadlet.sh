@@ -2,6 +2,24 @@
 
 # usage: curl -sL https://gist.github.com/grenade/128986996dc588c34ee6c3cbdd1b155a/raw/create-github-runner-quadlet.sh | bash -s ${GITHUB_ACCESS_TOKEN} ${GITHUB_ORG} ${GITHUB_REPO}
 
+gist_id=128986996dc588c34ee6c3cbdd1b155a
+gist_api_url=https://api.github.com/gists/${gist_id}
+
+# Determine latest gist revision SHA to avoid cached/older raw URLs
+latest_git_sha=$(
+    curl \
+        --fail \
+        --location \
+        --silent \
+        --url ${gist_api_url} \
+        | jq -r '.history[0].version'
+)
+
+if [ -z "${latest_git_sha}" ] || [ "${latest_git_sha}" = "null" ]; then
+    echo "Error: Failed to determine latest gist revision SHA from ${gist_api_url}" >&2
+    exit 1
+fi
+
 sudo mkdir -p /opt/github/runner
 for file in Containerfile entrypoint.sh template.env; do
     sudo curl \
@@ -9,14 +27,14 @@ for file in Containerfile entrypoint.sh template.env; do
         --location \
         --silent \
         --output /opt/github/runner/${file} \
-        --url https://gist.github.com/grenade/128986996dc588c34ee6c3cbdd1b155a/raw/${file}
+        --url https://gist.github.com/grenade/${gist_id}/raw/${latest_git_sha}/${file}
 done
 sudo curl \
     --fail \
     --location \
     --silent \
     --output /etc/containers/systemd/gh-runner.container \
-    --url https://gist.github.com/grenade/128986996dc588c34ee6c3cbdd1b155a/raw/gh-runner.container
+    --url https://gist.github.com/grenade/${gist_id}/raw/${latest_git_sha}/gh-runner.container
 
 sudo groupadd -f podman
 sudo mkdir -p /etc/systemd/system/podman.socket.d
@@ -25,7 +43,7 @@ sudo curl \
     --location \
     --silent \
     --output /etc/systemd/system/podman.socket.d/override.conf \
-    --url https://gist.github.com/grenade/128986996dc588c34ee6c3cbdd1b155a/raw/override.conf
+    --url https://gist.github.com/grenade/${gist_id}/raw/${latest_git_sha}/override.conf
 
 systemctl is-enabled podman.socket || sudo systemctl enable podman.socket
 systemctl is-active podman.socket || sudo systemctl start podman.socket
