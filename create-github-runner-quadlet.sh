@@ -10,11 +10,13 @@
 # Optional env:
 #   GITHUB_API_TOKEN         (optional PAT for calling GitHub Gist API; falls back to anonymous if unset)
 #   RUNNER_API_TOKEN         (optional PAT for calling GitHub Actions Runner releases API; falls back to anonymous if unset)
+#   UBUNTU_VERSION           (optional Ubuntu base image version, defaults to 22.04)
 #
 # This script:
 #   - Resolves the latest revision of this gist and downloads the quadlet artifacts
 #   - Queries the GitHub API for the latest Actions Runner release tag
 #   - Strips the "v" prefix and passes the version as a build-arg RUNNER_VERSION to podman build
+#   - Passes a configurable Ubuntu version as build-arg UBUNTU_VERSION (default 22.04)
 #   - Sets up podman.socket and the gh-runner systemd unit
 
 set -euo pipefail
@@ -237,11 +239,27 @@ fi
 echo "Using GitHub Actions Runner version ${RUNNER_VERSION} (tag ${runner_tag})"
 
 ###############################################################################
-# Build the runner image (pass RUNNER_VERSION as build-arg)
+# Determine Ubuntu version to use for base image
+###############################################################################
+# Default to 22.04 if UBUNTU_VERSION is not set.
+
+UBUNTU_VERSION_DEFAULT="22.04"
+UBUNTU_VERSION="${UBUNTU_VERSION:-${UBUNTU_VERSION_DEFAULT}}"
+
+if [ -z "${UBUNTU_VERSION}" ]; then
+    echo "Error: UBUNTU_VERSION resolved to empty value" >&2
+    exit 1
+fi
+
+echo "Using Ubuntu base image version ${UBUNTU_VERSION}"
+
+###############################################################################
+# Build the runner image (pass RUNNER_VERSION and UBUNTU_VERSION as build-args)
 ###############################################################################
 
 if ! sudo podman build \
     --build-arg "RUNNER_VERSION=${RUNNER_VERSION}" \
+    --build-arg "UBUNTU_VERSION=${UBUNTU_VERSION}" \
     -t localhost/gh-runner:latest \
     /opt/github/runner
 then
