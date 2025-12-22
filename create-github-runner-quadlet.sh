@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# usage: curl -sL https://gist.github.com/grenade/128986996dc588c34ee6c3cbdd1b155a/raw/create-github-runner-quadlet.sh | bash -s ${GITHUB_ORG} ${GITHUB_REPO} ${GITHUB_ACCESS_TOKEN}
+# usage: curl -sL https://gist.github.com/grenade/128986996dc588c34ee6c3cbdd1b155a/raw/create-github-runner-quadlet.sh | bash -s ${GITHUB_ACCESS_TOKEN} ${GITHUB_ORG} ${GITHUB_REPO}
 
 sudo mkdir -p /opt/github/runner
 for file in Containerfile entrypoint.sh template.env; do
@@ -30,8 +30,8 @@ sudo curl \
 systemctl is-enabled podman.socket || sudo systemctl enable podman.socket
 systemctl is-active podman.socket || sudo systemctl start podman.socket
 
-GITHUB_ORG=${1} GITHUB_REPO=${2} GITHUB_ACCESS_TOKEN=${3} RUNNER_NAME=$(hostname -s) envsubst < /opt/github/runner/template.env | sudo tee /opt/github/runner/.env
+GITHUB_ACCESS_TOKEN=${1} GITHUB_ORG=${2} GITHUB_REPO=${3} RUNNER_NAME=$(hostname -s) envsubst < /opt/github/runner/template.env | sudo tee /opt/github/runner/.env
 sudo podman build -t localhost/gh-runner:latest /opt/github/runner
 sudo systemctl daemon-reload
-sudo systemctl start gh-runner
+sudo systemctl restart gh-runner || sudo systemctl start gh-runner
 # journalctl -fu gh-runner
