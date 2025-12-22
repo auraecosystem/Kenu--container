@@ -48,7 +48,7 @@ sudo curl \
 systemctl is-enabled podman.socket || sudo systemctl enable podman.socket
 systemctl is-active podman.socket || sudo systemctl start podman.socket
 
-GITHUB_ACCESS_TOKEN=${1} GITHUB_ORG=${2} GITHUB_REPO=${3} RUNNER_NAME=$(hostname -s) envsubst < /opt/github/runner/template.env | sudo tee /opt/github/runner/.env
+GITHUB_ACCESS_TOKEN=${1} GITHUB_ORG=${2} GITHUB_REPO=${3} RUNNER_NAME=$(hostname -s) envsubst < /opt/github/runner/template.env | sudo tee /opt/github/runner/.env > /dev/null
 sudo podman build -t localhost/gh-runner:latest /opt/github/runner
 sudo systemctl daemon-reload
 sudo systemctl restart gh-runner || sudo systemctl start gh-runner
