@@ -241,7 +241,7 @@ echo "Using GitHub Actions Runner version ${RUNNER_VERSION} (tag ${runner_tag})"
 ###############################################################################
 # Determine Ubuntu version to use for base image
 ###############################################################################
-# Default to 22.04 if UBUNTU_VERSION is not set.
+# Default to 24.04 if UBUNTU_VERSION is not set.
 
 UBUNTU_VERSION_DEFAULT="24.04"
 UBUNTU_VERSION="${UBUNTU_VERSION:-${UBUNTU_VERSION_DEFAULT}}"
