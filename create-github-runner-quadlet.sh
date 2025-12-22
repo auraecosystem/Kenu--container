@@ -166,18 +166,10 @@ fi
 
 RUNNER_NAME="$(hostname -s)"
 
-# GITHUB_URL, etc. are derived in template.env; we only need to provide vars
-# for envsubst. Be quiet on success by redirecting stdout to /dev/null.
-if ! GITHUB_ACCESS_TOKEN="${GITHUB_ACCESS_TOKEN}" \
-     GITHUB_ORG="${GITHUB_ORG}" \
-     GITHUB_REPO="${GITHUB_REPO}" \
-     RUNNER_NAME="${RUNNER_NAME}" \
-     envsubst < /opt/github/runner/template.env \
-     | sudo tee /opt/github/runner/.env >/dev/null
-then
-    echo "Error: Failed to render /opt/github/runner/.env from template.env" >&2
-    exit 1
-fi
+GITHUB_ORG="${GITHUB_ORG}" \
+GITHUB_REPO="${GITHUB_REPO}" \
+RUNNER_NAME="${RUNNER_NAME}" \
+envsubst < /opt/github/runner/template.env | sudo tee /opt/github/runner/.env >/dev/null
 
 ###############################################################################
 # Build the runner image
