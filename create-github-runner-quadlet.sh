@@ -243,7 +243,7 @@ echo "Using GitHub Actions Runner version ${RUNNER_VERSION} (tag ${runner_tag})"
 ###############################################################################
 # Default to 22.04 if UBUNTU_VERSION is not set.
 
-UBUNTU_VERSION_DEFAULT="22.04"
+UBUNTU_VERSION_DEFAULT="24.04"
 UBUNTU_VERSION="${UBUNTU_VERSION:-${UBUNTU_VERSION_DEFAULT}}"
 
 if [ -z "${UBUNTU_VERSION}" ]; then
