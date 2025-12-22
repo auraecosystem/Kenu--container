@@ -166,8 +166,14 @@ fi
 
 RUNNER_NAME="$(hostname -s)"
 
-GITHUB_ORG="${GITHUB_ORG}" \
-GITHUB_REPO="${GITHUB_REPO}" \
+if [ -n "${GITHUB_REPO:-}" ] && [ "${GITHUB_REPO}" != "null" ]; then
+    GITHUB_URL=https://github.com/${GITHUB_ORG}/${GITHUB_REPO}
+else
+    GITHUB_URL=https://github.com/${GITHUB_ORG}
+fi
+
+GITHUB_ACCESS_TOKEN="${GITHUB_ACCESS_TOKEN}" \
+GITHUB_URL="${GITHUB_URL}" \
 RUNNER_NAME="${RUNNER_NAME}" \
 envsubst < /opt/github/runner/template.env | sudo tee /opt/github/runner/.env >/dev/null
 
