@@ -1,7 +1,8 @@
 FROM ubuntu:22.04
 
+ARG RUNNER_VERSION=2.330.0
 ENV DEBIAN_FRONTEND=noninteractive
-ENV RUNNER_VERSION=2.330.0
+ENV RUNNER_VERSION=${RUNNER_VERSION}
 
 # 1. Install base dependencies
 RUN apt-get update && apt-get install -yqq --no-install-recommends \

@@ -9,6 +9,13 @@
 #
 # Optional env:
 #   GITHUB_API_TOKEN         (optional PAT for calling GitHub Gist API; falls back to anonymous if unset)
+#   RUNNER_API_TOKEN         (optional PAT for calling GitHub Actions Runner releases API; falls back to anonymous if unset)
+#
+# This script:
+#   - Resolves the latest revision of this gist and downloads the quadlet artifacts
+#   - Queries the GitHub API for the latest Actions Runner release tag
+#   - Strips the "v" prefix and passes the version as a build-arg RUNNER_VERSION to podman build
+#   - Sets up podman.socket and the gh-runner systemd unit
 
 set -euo pipefail
 
@@ -39,8 +46,6 @@ fi
 gist_id="128986996dc588c34ee6c3cbdd1b155a"
 gist_api_url="https://api.github.com/gists/${gist_id}"
 
-# For quiet success, only print detailed info on failure.
-# We still echo the resolved SHA once so we can see what was used if needed.
 if [ -n "${GITHUB_API_TOKEN:-}" ] && [ "${GITHUB_API_TOKEN}" != "null" ]; then
     latest_git_sha="$(
         curl \
@@ -167,9 +172,9 @@ fi
 RUNNER_NAME="$(hostname -s)"
 
 if [ -n "${GITHUB_REPO:-}" ] && [ "${GITHUB_REPO}" != "null" ]; then
-    GITHUB_URL=https://github.com/${GITHUB_ORG}/${GITHUB_REPO}
+    GITHUB_URL="https://github.com/${GITHUB_ORG}/${GITHUB_REPO}"
 else
-    GITHUB_URL=https://github.com/${GITHUB_ORG}
+    GITHUB_URL="https://github.com/${GITHUB_ORG}"
 fi
 
 GITHUB_ACCESS_TOKEN="${GITHUB_ACCESS_TOKEN}" \
@@ -178,10 +183,68 @@ RUNNER_NAME="${RUNNER_NAME}" \
 envsubst < /opt/github/runner/template.env | sudo tee /opt/github/runner/.env >/dev/null
 
 ###############################################################################
-# Build the runner image
+# Fetch latest GitHub Actions Runner version
+###############################################################################
+# We call the public GitHub API:
+#   GET https://api.github.com/repos/actions/runner/releases/latest
+# and extract .tag_name (e.g. "v2.330.0"), then strip the "v" prefix.
+
+runner_releases_api="https://api.github.com/repos/actions/runner/releases/latest"
+runner_tag=""
+
+if [ -n "${RUNNER_API_TOKEN:-}" ] && [ "${RUNNER_API_TOKEN}" != "null" ]; then
+    runner_tag="$(
+        curl \
+            --fail \
+            --location \
+            --silent \
+            --header "Authorization: Bearer ${RUNNER_API_TOKEN}" \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --url "${runner_releases_api}" \
+            | jq --raw-output '.tag_name'
+    )" || {
+        echo "Error: Failed to fetch latest runner release (authenticated) from ${runner_releases_api}" >&2
+        exit 1
+    }
+else
+    runner_tag="$(
+        curl \
+            --fail \
+            --location \
+            --silent \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --url "${runner_releases_api}" \
+            | jq --raw-output '.tag_name'
+    )" || {
+        echo "Error: Failed to fetch latest runner release (anonymous) from ${runner_releases_api}" >&2
+        exit 1
+    }
+fi
+
+if [ -z "${runner_tag}" ] || [ "${runner_tag}" = "null" ]; then
+    echo "Error: Failed to determine latest runner tag from ${runner_releases_api}" >&2
+    exit 1
+fi
+
+# Strip leading "v" if present, e.g. "v2.330.0" -> "2.330.0"
+RUNNER_VERSION="${runner_tag#v}"
+
+if [ -z "${RUNNER_VERSION}" ]; then
+    echo "Error: Derived empty RUNNER_VERSION from tag '${runner_tag}'" >&2
+    exit 1
+fi
+
+echo "Using GitHub Actions Runner version ${RUNNER_VERSION} (tag ${runner_tag})"
+
+###############################################################################
+# Build the runner image (pass RUNNER_VERSION as build-arg)
 ###############################################################################
 
-if ! sudo podman build -t localhost/gh-runner:latest /opt/github/runner; then
+if ! sudo podman build \
+    --build-arg "RUNNER_VERSION=${RUNNER_VERSION}" \
+    -t localhost/gh-runner:latest \
+    /opt/github/runner
+then
     echo "Error: podman build of localhost/gh-runner:latest failed" >&2
     exit 1
 fi
