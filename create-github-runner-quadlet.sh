@@ -10,13 +10,13 @@
 # Optional env:
 #   GITHUB_API_TOKEN         (optional PAT for calling GitHub Gist API; falls back to anonymous if unset)
 #   RUNNER_API_TOKEN         (optional PAT for calling GitHub Actions Runner releases API; falls back to anonymous if unset)
-#   UBUNTU_VERSION           (optional Ubuntu base image version, defaults to 22.04)
+#   UBUNTU_VERSION           (optional Ubuntu base image version, defaults to 24.04)
 #
 # This script:
 #   - Resolves the latest revision of this gist and downloads the quadlet artifacts
 #   - Queries the GitHub API for the latest Actions Runner release tag
 #   - Strips the "v" prefix and passes the version as a build-arg RUNNER_VERSION to podman build
-#   - Passes a configurable Ubuntu version as build-arg UBUNTU_VERSION (default 22.04)
+#   - Passes a configurable Ubuntu version as build-arg UBUNTU_VERSION (default 24.04)
 #   - Sets up podman.socket and the gh-runner systemd unit
 
 set -euo pipefail
