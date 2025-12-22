@@ -7,12 +7,24 @@ gist_api_url=https://api.github.com/gists/${gist_id}
 
 # Determine latest gist revision SHA to avoid cached/older raw URLs
 latest_git_sha=$(
-    curl \
-        --fail \
-        --location \
-        --silent \
-        --url ${gist_api_url} \
-        | jq -r '.history[0].version'
+    if [ -z "${GITHUB_API_TOKEN}" ] || [ "${GITHUB_API_TOKEN}" = "null" ]; then
+        curl \
+            --fail \
+            --location \
+            --silent \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --url ${gist_api_url} \
+            | jq --raw-output '.history[0].version'
+    else
+        curl \
+            --fail \
+            --location \
+            --silent \
+            --header "Authorization: Bearer ${GITHUB_API_TOKEN}" \
+            --header 'X-GitHub-Api-Version: 2022-11-28' \
+            --url ${gist_api_url} \
+            | jq --raw-output '.history[0].version'
+    fi
 )
 
 if [ -z "${latest_git_sha}" ] || [ "${latest_git_sha}" = "null" ]; then
