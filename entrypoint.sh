@@ -55,7 +55,7 @@ echo "Configuring runner..."
     --token "${REG_TOKEN}" \
     --name "${RUNNER_NAME:-$(hostname)}" \
     --work _work \
-    --labels "podman,docker" \
+    --labels "podman" \
     --replace
 
 echo "Starting runner..."
