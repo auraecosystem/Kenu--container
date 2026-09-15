@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ToolsetConfiguration",
+  "description": "Schema definition for automated toolset configurations and local runtime parameters.",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema or toolset configuration version (e.g., '1.0.0')."
+    },
+    "environment": {
+      "type": "string",
+      "enum": ["development", "staging", "production", "air-gapped"],
+      "description": "Target deployment environment."
+    },
+    "tools": {
+      "type": "array",
+      "description": "List of active tools and execution wrappers enabled in this toolset.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unique identifier or name of the tool."
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Indicates whether the tool is active."
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Maximum execution duration allowed for the tool."
+          },
+          "parameters": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Key-value configuration parameters passed to the tool."
+          }
+        },
+        "required": ["name", "enabled"]
+      }
+    }
+  },
+  "required": ["version", "tools"]
+}
